@@ -1,6 +1,9 @@
 '''
 Scraping number of posts, followers, following + likes, and comments per photo 
 from any public account
+
+Original Instagram web scraper script by helloitsim with a few adjustments and 
+JSON to CSV converter function put in for my specific purpose
 '''
 
 from selenium import webdriver
@@ -8,7 +11,7 @@ from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from selenium.webdriver.common.action_chains import ActionChains
 from bs4 import BeautifulSoup
 from datetime import datetime
-import json, time, os, re
+import json, time, os, re, csv
 
 
 #List of users
@@ -137,8 +140,22 @@ def InstAnalytics():
 def JSONtoCSV():
     
     #Write json data into csv format
-    with open('InstAnalytics.csv') as iaCSV:
-        
+    jsonF = open('InstAnalytics.json')
+    jsonD = json.load(jsonF)
+    jsonF.close()
+    
+    date = jsonD[0]['date']
+    followers = jsonD[0]['data']['followers']
+    following = jsonD[0]['data']['following']
+    posts = jsonD[0]['data']['posts']
+    
+    
+    csvF = csv.writer(open("InstAnalytics.csv", "wb"))
+    
+    csvF.writerow(["date","followers","following","posts"])
+    
+    csvF.writerow(date, followers, following, posts)
+            
 
 '''------------
 Main
@@ -155,8 +172,9 @@ if __name__ == '__main__':
         iaDictionary = []
         with open ('InstAnalytics.json', 'w') as iaFile:
             json.dump(iaDictionary, iaFile, indent=4)
-            
-    InstAnalytics()
+    
+    #Check if CSV file exists, otherwise create it
+    if os.path.isfile('InstAnalytics.csv', 'w'):
 
     print('Scraping data from', user, 'account every day at 11am\n')
 
@@ -173,5 +191,8 @@ if __name__ == '__main__':
         else:
             time.sleep(60) #Check every minute
         
+        if datetime.now().hour == 14:
+            print("Writing most recent data to csv\n")
+            
         #write json into csv
     
