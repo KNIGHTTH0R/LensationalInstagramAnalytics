@@ -7,7 +7,6 @@ JSON to CSV converter function put in for my specific purpose
 '''
 
 from selenium import webdriver
-from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from selenium.webdriver.common.action_chains import ActionChains
 from bs4 import BeautifulSoup
 from datetime import datetime
@@ -142,19 +141,18 @@ def JSONtoCSV():
     #Write json data into csv format
     jsonF = open('InstAnalytics.json')
     jsonD = json.load(jsonF)
-    jsonF.close()
     
     date = jsonD[0]['date']
     followers = jsonD[0]['data']['followers']
     following = jsonD[0]['data']['following']
     posts = jsonD[0]['data']['posts']
     
+    csvfile = open('InstAnalytics.csv', 'a', newline='')
+    csvF = csv.writer(csvfile)
     
-    csvF = csv.writer(open("InstAnalytics.csv", "wb"))
-    
-    csvF.writerow(["date","followers","following","posts"])
-    
-    csvF.writerow(date, followers, following, posts)
+    csvF.writerow([date, followers, following, posts])
+    csvfile.flush()
+    csvfile.close()
             
 
 '''------------
@@ -174,25 +172,24 @@ if __name__ == '__main__':
             json.dump(iaDictionary, iaFile, indent=4)
     
     #Check if CSV file exists, otherwise create it
-    if os.path.isfile('InstAnalytics.csv', 'w'):
+    if os.path.isfile('InstAnalytics.csv') == False:
+        with open('InstAnalytics.csv', 'w', newline='') as csvfile:
+            csvF = csv.writer(csvfile)
+            csvF.writerow(["date","followers","following","posts"])
+            csvfile.flush()
 
     print('Scraping data from', user, 'account every day at 11am\n')
 
     while True:
         #Scheduled, every day at 11pm
-        if datetime.now().hour == 13:
+        if datetime.now().hour == 17:
             print(datetime.now().strftime(timeFormat))
             try:
                 InstAnalytics()
+                JSONtoCSV()
                 time.sleep(82800) #sleep for 23 hours 
             except Exception:
                 print('Error')
                 time.sleep(30) #Retry after 30s
         else:
             time.sleep(60) #Check every minute
-        
-        if datetime.now().hour == 14:
-            print("Writing most recent data to csv\n")
-            
-        #write json into csv
-    
